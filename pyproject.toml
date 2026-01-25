@@ -1,5 +1,5 @@
 [project]
-name = "data-query-agent"
+name = "dq-swirl"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -14,11 +14,6 @@ dependencies = [
     "quart>=0.20.0,<1.0.0",
 ]
 
-[build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
-
-
 [dependency-groups]
 dev = [
     "ruff"
@@ -29,4 +24,47 @@ test = [
     "python-dotenv"
 ]
 
+[project.scripts]
+swirl = "dq_swirl:hello"
+
+[tool.uv]
+default-groups = []
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [tool.ruff]
+exclude = [
+    ".git",
+    ".eggs",
+    ".ipynb-checkpoints", 
+    ".pytype", 
+    ".pyenv",
+    ".venv", 
+    ".vscode", 
+    "__pypackages__",
+    "build", 
+    "dist",
+    "site-packages",
+    ".ipynb",
+    ".ruff_cache"
+]
+
+line-length = 88
+indent-width = 4
+target-version = "py314"
+
+[too.ruff.lint]
+ignore = ["F401"]
+fixable = ["ALL"]
+
+# allow for unused variables when prefixed with underscore
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?)$"
+
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

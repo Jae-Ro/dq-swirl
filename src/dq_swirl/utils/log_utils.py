@@ -1,10 +1,9 @@
-
 import logging
 
 
 def get_custom_logger(
     name: str = "dq-agent",
-    log_level: int = logging.DEBUG
+    log_level: int = logging.DEBUG,
 ) -> logging.Logger:
     """Function to return a custom formatter logger object
 
@@ -17,7 +16,7 @@ def get_custom_logger(
 
     if len(logger.handlers > 0):
         return logger
-    
+
     # handlers
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(log_level)
@@ -25,7 +24,7 @@ def get_custom_logger(
     # formatters
     formatter = logging.Formatter(
         "%(asctime)s %(name)s %(filename)s:%(lineno)s [%(levelname)s]: %(message)s",
-        "%Y-%m-%d %H:%M:%S" 
+        "%Y-%m-%d %H:%M:%S",
     )
 
     stream_handler.setFormatter(formatter)
@@ -33,4 +32,3 @@ def get_custom_logger(
     logger.handlers = [stream_handler]
 
     return logger
-
