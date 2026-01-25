@@ -1,6 +1,7 @@
 # file: dummy_customer_api.py
-from flask import Flask, request, jsonify
 import random
+
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
@@ -10,8 +11,9 @@ ORDERS = [
     "Order 1002: Buyer=Sarah Liu, Location=Austin, TX, Total=$156.55, Items: headphones",
     "Order 1003: Buyer=Mike Turner, Location=Cleveland, OH, Total=$1299.99, Items: gaming pc, mouse",
     "Order 1004: Buyer=Rachel Kim, Location=Seattle, WA, Total=$89.50, Items: coffee maker",
-    "Order 1005: Buyer=Chris Myers, Location=Cincinnati, OH, Total=$512.00, Items: monitor, desk lamp"
+    "Order 1005: Buyer=Chris Myers, Location=Cincinnati, OH, Total=$512.00, Items: monitor, desk lamp",
 ]
+
 
 @app.route("/api/orders", methods=["GET"])
 def get_orders():
@@ -22,10 +24,12 @@ def get_orders():
     limit = request.args.get("limit", default=len(ORDERS), type=int)
     sample = random.sample(ORDERS, min(limit, len(ORDERS)))
 
-    return jsonify({
-        "status": "ok",
-        "raw_orders": sample
-    })
+    return jsonify(
+        {
+            "status": "ok",
+            "raw_orders": sample,
+        }
+    )
 
 
 @app.route("/api/order/<order_id>", methods=["GET"])
@@ -35,10 +39,12 @@ def get_order_by_id(order_id):
     """
     for text in ORDERS:
         if order_id in text:
-            return jsonify({
-                "status": "ok",
-                "raw_order": text
-            })
+            return jsonify(
+                {
+                    "status": "ok",
+                    "raw_order": text,
+                }
+            )
 
     return jsonify({"status": "not_found"}), 404
 

@@ -1,2 +1,5 @@
 def hello() -> str:
-    return "Hello from data-query-agent!"
+    return (
+        "\nWelcome to DQ Swirl! The Agentic Data Querying Experience.\n"
+        "* Author: Jae Ro\n"
+    )
