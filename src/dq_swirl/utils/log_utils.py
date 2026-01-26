@@ -2,12 +2,12 @@ import logging
 
 
 def get_custom_logger(
-    name: str = "dq-agent",
+    name: str = "swirl",
     log_level: int = logging.DEBUG,
 ) -> logging.Logger:
     """Function to return a custom formatter logger object
 
-    :param name: name of logger, defaults to "dq-agent"
+    :param name: name of logger, defaults to "swirl"
     :param log_level: desired logging level, defaults to logging.DEBUG
     :return: custom formatted Logger instance with StreamHandler
     """
