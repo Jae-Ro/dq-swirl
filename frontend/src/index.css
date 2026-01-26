@@ -11,6 +11,9 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --bg-bubble-user: #28303f;
+  --bg-chat-input: #2b2a33;
+  --bg-chat-button-inflight: #282c31;
 }
 
 a {
@@ -47,22 +50,34 @@ button {
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  background-color: var(--bg-chat-button-inflight);
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+textarea::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
+    --bg-bubble-user: #616bc5;
+    --bg-chat-input: #c6cdd2;
+    --bg-chat-button-inflight: #5f699c;
   }
   a:hover {
     color: #747bff;
   }
   button {
-    background-color: #f9f9f9;
+    background-color:#4153af;
+    color: white !important;
+  }
+  button:hover {
+    background-color: var(--bg-chat-button-inflight);
   }
 }

@@ -1,6 +1,5 @@
 # DQ Swirl App Frontend
 
-
 ## Developer Quickstart
 ```bash
 nvm use
