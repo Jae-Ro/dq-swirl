@@ -1,9 +1,11 @@
 import json
 import os
-from typing import AsyncGenerator, Optional
+from typing import Annotated, AsyncGenerator, Optional
 
 from dotenv import load_dotenv
 from litellm import ModelResponse, acompletion
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic.alias_generators import to_camel
 from quart import Quart, Response, make_response, request
 from quart_cors import cors
 
@@ -18,6 +20,29 @@ app = Quart(__name__)
 app = cors(app, allow_origin="*")
 
 
+class ChatRequest(BaseModel):
+    """
+    BaseModel class to dictate chat request parameters.
+
+    Attributes:
+        prompt: user's input message -- must not be empty string (required)
+        model: name of model to be run (required)
+        user_id: id of user (required)
+        conversation_id: id of chat conversation from provided user (required)
+    """
+
+    # for converting camelCase to snake_case
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+    # attributes
+    prompt: str = Annotated[str, Field(min_length=1)]
+    model: str
+    user_id: str
+    conversation_id: str
+
+
 @app.route("/api/chat", methods=["POST"])
 async def chat() -> Response:
     """Function to handle /api/chat route
@@ -27,9 +52,17 @@ async def chat() -> Response:
     """
     body = await request.get_json()
     logger.debug(f"Handling Chat Request:\n{json.dumps(body, indent=4)}")
-    user_prompt = body.get("prompt")
-    # Using the correct model name now!
-    model = body.get("model", "openai/google/gemma-3-27b-it")
+
+    # handling request body validation
+    try:
+        body = ChatRequest.model_validate(body)
+    except ValidationError as e:
+        logger.exception(e)
+        return await make_response({"error": e.errors()}, 400)
+
+    # get parsed fields
+    user_prompt = body.prompt
+    model = body.model
 
     async def generate() -> AsyncGenerator[str, None]:
         # heartbeat token to open resp stream pipe
