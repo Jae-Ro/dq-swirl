@@ -43,6 +43,11 @@ class ChatRequest(BaseModel):
     conversation_id: str
 
 
+@app.route("/health", methods=["GET"])
+async def health_check() -> Response:
+    return await make_response({"status": "ok"}, 200)
+
+
 @app.route("/api/chat", methods=["POST"])
 async def chat() -> Response:
     """Function to handle /api/chat route
