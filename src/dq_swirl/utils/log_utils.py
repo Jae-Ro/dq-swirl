@@ -14,7 +14,7 @@ def get_custom_logger(
     logger = logging.getLogger(name)
     logger.propagate = False
 
-    if len(logger.handlers > 0):
+    if len(logger.handlers) > 0:
         return logger
 
     # handlers

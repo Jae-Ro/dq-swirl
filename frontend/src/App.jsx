@@ -64,7 +64,7 @@ const App = () => {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    const timeoutSignal = AbortSignal.timeout(20000);
+    const timeoutSignal = AbortSignal.timeout(300_000);
     const combinedSignal = AbortSignal.any([controller.signal, timeoutSignal]);
 
     let accumulatedContent = "";
@@ -73,7 +73,7 @@ const App = () => {
       const stream = await fetchChatStream({
         userId: 'user_123',
         conversationId: 'conv_456',
-        model: 'google/gemma-3-27b-it',
+        model: 'openai/google/gemma-3-27b-it',
         prompt: currentInput
       }, combinedSignal);
 
@@ -83,12 +83,12 @@ const App = () => {
       }
     } catch (error) {
       if (error.name === 'TimeoutError') {
-        updateLastMessage("[ERROR]: Request timed out.");
+        updateLastMessage(accumulatedContent + "\n\n[ERROR]: Request timed out.");
       } else if (error.name === 'AbortError') {
-        updateLastMessage(accumulatedContent + "... (Stopped)");
+        updateLastMessage(accumulatedContent + "\n\n... (Stopped)");
       } else {
         console.error('Fetch error:', error);
-        updateLastMessage("[ERROR]: Connection failed.");
+        updateLastMessage(accumulatedContent + "\n\n[ERROR]: Connection failed.");
       }
     } finally {
       setLoading(false);

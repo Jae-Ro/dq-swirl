@@ -61,16 +61,7 @@
 }
 
 .bubble {
-  padding: 10px 20px;
-  border-radius: 18px;
-  max-width: 85%;
-  overflow-wrap: normal;
-  display: flex;
-  flex-direction: column;
-}
-
-.assistant .bubble {
-  padding: 10px 20px;
+  padding: 8px 20px;
   border-radius: 18px;
   max-width: 85%;
   overflow-wrap: normal;
@@ -82,6 +73,10 @@
   display:  flex;
   width:  100%;
   justify-content: flex-end;
+}
+
+.assistant .bubble-header {
+  justify-content: flex-start;
 }
 
 .copy-icon-svg {
