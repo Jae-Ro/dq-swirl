@@ -51,7 +51,7 @@ async def chat() -> Response:
     :yield: SSE response chunk string
     """
     body = await request.get_json()
-    logger.debug(f"Handling Chat Request:\n{json.dumps(body, indent=4)}")
+    logger.info(f"Handling Chat Request:\n{json.dumps(body, indent=4)}")
 
     # handling request body validation
     try:
@@ -106,7 +106,11 @@ async def chat() -> Response:
 
         except Exception as e:
             logger.exception(e)
-            error_payload = json.dumps({"error": f"{str(e)}"})
+            error_payload = json.dumps(
+                {
+                    "error": f"{str(e)}",
+                }
+            )
             yield f"data: {error_payload}\n\n"
             yield "data: [DONE]\n\n"
 

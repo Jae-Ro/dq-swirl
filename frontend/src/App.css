@@ -20,7 +20,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  height: 85vh;
+  height: 70vh;
 }
 
 .chat-app {
