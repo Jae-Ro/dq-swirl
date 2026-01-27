@@ -1,113 +1,154 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AnimatedMarkdown } from 'flowtoken';
-// import 'flowtoken/dist/styles.css';
+import fetchChatStream from './api/chat'; 
+import { CopyIcon } from './components/CopyIcon';
 import './App.css';
 
 const App = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+  
+  const abortControllerRef = useRef(null);
   const scrollRef = useRef(null);
 
-  useEffect(() => { scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { 
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); 
+  }, [messages]);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
-
-    const userMsg = { role: 'user', content: input };
-    // Add user message and an empty assistant shell
-    setMessages(prev => [...prev, userMsg, { role: 'assistant', content: '' }]);
-    setInput('');
-    setLoading(true);
-
-    // This mutable ref acts as our "accumulator" outside of the React render loop
-    let chunkBuffer = ""; 
-
+  const copyToClipboard = async (text, id) => {
     try {
-      const response = await fetch('http://localhost:8000/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'google/gemma-3-27b-it',
-          messages: [...messages, userMsg],
-          stream: true
-        })
-      });
-
-      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        // value is already decoded text thanks to TextDecoderStream
-        const lines = value.split('\n');
-        let newTokens = "";
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ') || line.includes('[DONE]')) continue;
-          try {
-            const data = JSON.parse(line.slice(6));
-            newTokens += data.choices[0].delta.content || '';
-          } catch (e) {}
-        }
-
-        if (newTokens) {
-          chunkBuffer += newTokens;
-          // Optimization: We only update the content of the specific last message object.
-          // We use the functional update to target ONLY the last item without cloning the full history array logic repeatedly.
-          setMessages(prev => {
-            const lastIndex = prev.length - 1;
-            const updatedLast = { ...prev[lastIndex], content: chunkBuffer };
-            return [...prev.slice(0, lastIndex), updatedLast];
-          });
-        }
-      }
-    } finally {
-      setLoading(false);
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
     }
   };
 
   const handleKeyDown = (e) => {
-  // Submit on Enter, but allow Shift+Enter for new lines
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    handleSend(e);
-  }
-};
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+  
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  };
+
+  const updateLastMessage = (content) => {
+    setMessages(prev => {
+      const lastIdx = prev.length - 1;
+      const updated = [...prev];
+      updated[lastIdx] = { ...updated[lastIdx], content };
+      return updated;
+    });
+  };
+
+  const handleSend = async (e) => {
+    if (e) e.preventDefault();
+    if (!input.trim() || loading) return;
+
+    const currentInput = input;
+    const userMsg = { id: crypto.randomUUID(), role: 'user', content: currentInput };
+    const assistantId = crypto.randomUUID();
+    
+    setMessages(prev => [...prev, userMsg, { id: assistantId, role: 'assistant', content: '' }]);
+    setInput('');
+    setLoading(true);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    const timeoutSignal = AbortSignal.timeout(20000);
+    const combinedSignal = AbortSignal.any([controller.signal, timeoutSignal]);
+
+    let accumulatedContent = "";
+
+    try {
+      const stream = await fetchChatStream({
+        userId: 'user_123',
+        conversationId: 'conv_456',
+        model: 'google/gemma-3-27b-it',
+        prompt: currentInput
+      }, combinedSignal);
+
+      for await (const token of stream) {
+        accumulatedContent += token;
+        updateLastMessage(accumulatedContent);
+      }
+    } catch (error) {
+      if (error.name === 'TimeoutError') {
+        updateLastMessage("[ERROR]: Request timed out.");
+      } else if (error.name === 'AbortError') {
+        updateLastMessage(accumulatedContent + "... (Stopped)");
+      } else {
+        console.error('Fetch error:', error);
+        updateLastMessage("[ERROR]: Connection failed.");
+      }
+    } finally {
+      setLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
 
   return (
-    <div className="chat-card">
-      <div className="chat-app">
-        <div className="messages-list">
-          {messages.map((m, i) => (
-            <div key={i} className={`message-wrapper ${m.role}`}>
-              <div className="bubble">
-                <AnimatedMarkdown 
-                  content={m.content}
-                  animation={null} 
-                />
+    <div className="app-container">
+      <div className="slider"></div>
+      <div className="chat-card">
+        <div className="chat-app">
+          <div className="messages-list">
+            {messages.map((m) => (
+              <div key={m.id} className={`message-wrapper ${m.role}`}>
+                <div className="bubble">
+                  { m.content && (
+                    <div className="bubble-header">
+                      <button 
+                        className={`copy-btn-header ${copiedId === m.id ? 'copied' : ''}`}
+                        onClick={() => copyToClipboard(m.content, m.id)}
+                        aria-label="Copy message"
+                      >
+                        {copiedId === m.id ? (
+                          <span className="copied-text">✓</span>
+                        ) : (
+                          <CopyIcon className="copy-icon-svg" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+                  <div className="markdown-container">
+                    <AnimatedMarkdown content={m.content} animation={null} />
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
-          <div ref={scrollRef} />
-        </div>
+            ))}
+            <div ref={scrollRef} />
+          </div>
 
-        <form className="input-bar" onSubmit={handleSend}>
-          <textarea 
-            placeholder="Message vLLM..." 
-            rows="1"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <button type="submit" disabled={loading}>↑</button>
-        </form>
+          <form className="input-bar" onSubmit={handleSend}>
+            <textarea
+              placeholder="Message vLLM..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            
+            {loading ? (
+              <button type="button" className="stop-btn" onClick={handleStop}>■</button>
+            ) : (
+              <button type="submit" disabled={!input.trim()}>↑</button>
+            )}
+          </form>
+          <p> DQ Agent can make mistakes, so double-check it </p>
+        </div>
       </div>
+      <div className="right-pillar"></div>
     </div>
   );
 }
 
-
-export default App
+export default App;

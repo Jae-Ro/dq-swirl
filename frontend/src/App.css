@@ -1,7 +1,23 @@
 
+.app-container {
+  display: flex;
+  align-items: end;
+  justify-content: first baseline;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* SIDEBAR NAV */
+.slider {
+  background-color: #1e1f20;
+  height: 100vh;
+  width: min(25vw, 400px);
+}
+
+
+/* CHAT */
 .chat-card {
   display: flex;
-  width: 100vw;
   flex-direction: column;
   justify-content: flex-end;
   height: 85vh;
@@ -11,8 +27,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 75vh;
-  width: min(85vw, 900px);
+  height: 100%;
+  width: min(80vw, 850px);
   margin: 0 auto;
   padding: 30px 0;
   scrollbar-width: thin;
@@ -45,7 +61,7 @@
 }
 
 .bubble {
-  padding: 10px 16px;
+  padding: 10px 20px;
   border-radius: 18px;
   max-width: 85%;
   overflow-wrap: normal;
@@ -53,13 +69,53 @@
   flex-direction: column;
 }
 
+.assistant .bubble {
+  padding: 10px 20px;
+  border-radius: 18px;
+  max-width: 85%;
+  overflow-wrap: normal;
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.bubble-header {
+  display:  flex;
+  width:  100%;
+  justify-content: flex-end;
+}
+
+.copy-icon-svg {
+  width: 16px;
+  height: 16px;
+  transition: filter 0.2s;
+}
+
+.user .copy-icon-svg {
+  color: var(--color-copy-icon-user);
+}
+.user .copied-text {
+  color: var(--color-copy-icon-user);
+}
+
+.assistant .copy-icon-svg {
+  color: var(--color-copy-icon-assistant);
+}
+.assistant .copied-text {
+  color: var(--color-copy-icon-assistant);
+}
+
+.bubble-header button {
+  background-color: inherit;
+  padding: 2px 4px;
+}
+
 .bubble::-webkit-scrollbar-track {
   background: transparent;
 }
 
 .bubble pre {
-  background: #2d2d2d;
-  color: #fff;
+  background: canvas;
+  color: canvastext;
   padding: 10px;
   border-radius: 6px;
   overflow-x: auto;
@@ -80,9 +136,8 @@
   color: white;
   min-width: 20%;
   text-align: left;
-  padding: 0 20px;
   overflow-x: auto;
-  }
+}
 
 .assistant .bubble {
   color: canvastext;
@@ -101,7 +156,7 @@
 
 .input-bar textarea {
   flex: 1;
-  width: min(80vw, 800px);
+  width: min(65vw, 650px);
   min-height: 60px;
   max-height: 100px;
   padding: 30px 20px;
@@ -127,9 +182,4 @@
   border-radius: 20px;
   cursor: pointer;
   margin: 0 10px 10px 0;
-}
-
-.input-bar button:disabled {
-  background: var(--bg-chat-button-inflight);
-  cursor: default;
 }
