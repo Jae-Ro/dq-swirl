@@ -1,23 +1,31 @@
+import dataclasses
 import json
 import os
+import uuid
 from typing import Annotated, AsyncGenerator, Optional
 
 from dotenv import load_dotenv
-from litellm import ModelResponse, acompletion
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from pydantic.alias_generators import to_camel
-from quart import Quart, Response, make_response, request
+from quart import Quart, Response, make_response, request, stream_with_context
 from quart_cors import cors
+from redis.asyncio import from_url
+from saq import Queue
 
+from dq_swirl.tasks.schemas import ChatTaskPayload, CleanupTaskPayload
 from dq_swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 
 load_dotenv("secrets.env")
-
+load_dotenv(".env")
 
 app = Quart(__name__)
 app = cors(app, allow_origin="*")
+
+# global connections
+redis_client = None
+task_queue = None
 
 
 class ChatRequest(BaseModel):
@@ -43,6 +51,30 @@ class ChatRequest(BaseModel):
     conversation_id: str
 
 
+@app.before_serving
+async def setup_connections():
+    """Initialize Redis and SAQ Queue before the app starts serving."""
+    global redis_client, task_queue
+    redis_host = os.getenv("REDIS_HOST")
+    redis_port = os.getenv("REDIS_PORT")
+    redis_pw = os.getenv("REDIS_PW")
+    redis_url = f"redis://:{redis_pw}@{redis_host}:{redis_port}"
+
+    # Initialize the primary Redis client for Pub/Sub and SAQ
+    redis_client = from_url(redis_url, decode_responses=False)
+    task_queue = Queue.from_url(redis_url, name="ai-queue")
+
+    logger.info("Successfully connected to Redis and SAQ Queue.")
+
+
+@app.after_serving
+async def close_connections():
+    """Gracefully close connections on shutdown."""
+    if redis_client:
+        await redis_client.close()
+        logger.info("Closed Redis connections.")
+
+
 @app.route("/health", methods=["GET"])
 async def health_check() -> Response:
     return await make_response({"status": "ok"}, 200)
@@ -65,59 +97,70 @@ async def chat() -> Response:
         logger.exception(e)
         return await make_response({"error": e.errors()}, 400)
 
-    # get parsed fields
-    user_prompt = body.prompt
-    model = body.model
+    # create pubsub streamid
+    stream_id = str(uuid.uuid4())
 
+    # create task payload
+    payload = ChatTaskPayload(
+        user_id=body.user_id,
+        conversation_id=body.conversation_id,
+        model=body.model,
+        prompt=body.prompt,
+        pubsub_stream_id=stream_id,
+    )
+
+    # redis queue
+    await task_queue.enqueue(
+        "run_dq_agent_task",
+        data=dataclasses.asdict(payload),
+        timeout=300,
+    )
+
+    @stream_with_context
     async def generate() -> AsyncGenerator[str, None]:
-        # heartbeat token to open resp stream pipe
+        # initial heartbeat to establish the connection
         yield ": heartbeat\n\n"
 
-        messages = [
-            {
-                "role": "user",
-                "content": user_prompt,
-            }
-        ]
-        llm_api_base = f"{os.getenv('OPENAI_API_BASE_URL')}/v1"
+        async with redis_client.pubsub() as pubsub:
+            logger.info(f"Subscribed to {stream_id}")
+            await pubsub.subscribe(stream_id)
+            try:
+                async for message in pubsub.listen():
+                    if message["type"] == "message":
+                        content = message["data"].decode("utf-8")
 
-        logger.debug(
-            f"Sending Request to {llm_api_base} for model: {model}:\n{json.dumps(messages, indent=4)}"
-        )
+                        # end of stream
+                        if content == "[DONE]":
+                            yield "data: [DONE]\n\n"
+                            break
 
-        try:
-            response = await acompletion(
-                model=model,
-                messages=messages,
-                api_base=llm_api_base,
-                stream=True,
-                api_key=os.getenv("OPENAI_API_KEY"),
-            )
+                        # error in stream
+                        if content.startswith("[ERROR]"):
+                            raise Exception(content)
 
-            async for chunk in response:
-                chunk: ModelResponse
-                content: Optional[str] = chunk.choices[0].delta.content
-                if content:
-                    payload = json.dumps(
-                        {
-                            "data": {
-                                "content": content,
+                        # relay the event
+                        chunk_payload = json.dumps(
+                            {
+                                "data": {
+                                    "content": content,
+                                }
                             }
-                        }
-                    )
-                    yield f"data: {payload}\n\n"
+                        )
+                        yield f"data: {chunk_payload}\n\n"
 
-            yield "data: [DONE]\n\n"
+            except Exception as e:
+                error_msg = f"{e}".replace("[ERROR]", "")
+                error_payload = json.dumps(
+                    {
+                        "error": error_msg,
+                    }
+                )
+                yield f"data: {error_payload}"
+                yield "data: [DONE]\n\n"
 
-        except Exception as e:
-            logger.exception(e)
-            error_payload = json.dumps(
-                {
-                    "error": f"{str(e)}",
-                }
-            )
-            yield f"data: {error_payload}\n\n"
-            yield "data: [DONE]\n\n"
+            finally:
+                await pubsub.unsubscribe(stream_id)
+                logger.info(f"Unsubscribed from {stream_id}")
 
     # create response stream object
     response = await make_response(generate())

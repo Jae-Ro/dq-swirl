@@ -11,6 +11,9 @@ services:
     ports: ["5000:5000"]
     env_file:
       - secrets.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
@@ -18,3 +21,42 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    volumes:
+      - ./src/:/app/src/
+      - ./app/:/app/app/
+  
+  worker:
+    container_name: app-worker
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    image: app-worker:latest
+    entrypoint: ["saq", "worker.saq_worker.settings", "--web"]
+    ports: ["8080:8080"]
+    env_file:
+      - .env
+      - secrets.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    restart: unless-stopped
+    volumes:
+      - ./src/:/app/src/
+      - ./worker/:/app/worker/
+  
+  redis:
+    container_name: redis
+    image: redis:latest
+    restart: always
+    ports: ["6379:6379"]
+    command: ["redis-server", "--requirepass", "password"]
+  
+  redis-insight:
+    container_name: redis-insight
+    image: redis/redisinsight:latest
+    restart: always
+    ports: ["5540:5540"]
+    depends_on:
+      - redis
+
+    

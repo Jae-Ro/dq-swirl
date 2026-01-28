@@ -1,8 +1,10 @@
-import litellm
-from litellm import ModelResponse, CustomStreamWrapper
-from typing import List, Dict, Optional, AsyncIterable
-from dq_swirl.utils.log_utils import get_custom_logger
 import os
+from typing import AsyncIterable, Dict, List, Optional
+
+import litellm
+from litellm import CustomStreamWrapper, ModelResponse
+
+from dq_swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 
@@ -11,6 +13,7 @@ class AsyncLLMClient:
     """
     A high-level asynchronous client for interacting with Large Language Models via LiteLLM.
     """
+
     def __init__(
         self,
         model: str,
@@ -24,8 +27,11 @@ class AsyncLLMClient:
         self.model = model
         self.api_base = api_base
 
+    def __repr__(self):
+        return f"AsyncLLMClient(base_url={self.api_base}, model={self.model})"
+
     async def chat(
-        self, 
+        self,
         messages: List[Dict[str, str]],
         model_override: Optional[str] = None,
         base_url_override: Optional[str] = None,
@@ -33,9 +39,9 @@ class AsyncLLMClient:
         **lite_llm_kwargs,
     ) -> ModelResponse | AsyncIterable[ModelResponse]:
         """Async method to send a chat completion request to configured LLM provider inference endpoint
-        
-        Supports optional overrides for model, URL, and credentials on a 
-        per-call basis. It handles both synchronous returns and asynchronous streaming 
+
+        Supports optional overrides for model, URL, and credentials on a
+        per-call basis. It handles both synchronous returns and asynchronous streaming
         iterators based on the 'stream' parameter passed in lite_llm_kwargs
 
         :param messages: list of message dictionaries (e.g., {"role": "user", "content": "..."})
@@ -54,17 +60,16 @@ class AsyncLLMClient:
         api_base = self.api_base
         if base_url_override:
             api_base = base_url_override
-            
+
         # handle api key override
-        api_key = os.getenv("OPENAI_API_KEY", "123")
+        api_key = os.getenv("LLM_API_KEY", "123")
         if api_key_override:
             api_key = api_key_override
-        
+
         return await litellm.acompletion(
             model=model,
             messages=messages,
             api_base=api_base,
             api_key=api_key,
-            **lite_llm_kwargs
+            **lite_llm_kwargs,
         )
-

@@ -18,7 +18,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ruff"
+    "ruff",
+    "aiohttp-basicauth"
 ]
 test = [
     "pytest",
@@ -32,7 +33,7 @@ app = [
     "hypercorn>=0.18.0,<1.0.0"
 ]
 
-agent = [
+worker = [
     "langgraph>=1.0.7,<2.0.0",
     "litellm>=1.81.4,<2.0.0",
 ]
