@@ -58,5 +58,28 @@ services:
     ports: ["5540:5540"]
     depends_on:
       - redis
+  
+  postgres:
+    container_name: postgres
+    image: pgduckdb/pgduckdb:18-main
+    restart: always
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_USER: app_developer
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: store
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username=app_developer --dbname=store"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
-    
+  pgadmin4:
+    container_name: pgadmin4
+    image: elestio/pgadmin:latest
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_LISTEN_PORT: 8080
+    ports: ["9090:8080"]
