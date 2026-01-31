@@ -54,8 +54,14 @@ swirl = "dq_swirl:hello"
 default-groups = []
 
 [build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+python-source = "src" 
+module-name = "dq_swirl.rust_ingestion"
+features = ["pyo3/extension-module"]
+include = ["src/dq_swirl/*.pyi"]
 
 [tool.ruff]
 exclude = [

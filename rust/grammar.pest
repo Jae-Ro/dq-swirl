@@ -1,0 +1,13 @@
+// pair: KEY DELIMITER [VALUE]
+pair_segment = { SOI ~ key ~ delimiter ~ value? ~ EOI }
+
+// KEY: /[a-zA-Z_]\w*/
+key = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+
+// DELIMITER: /\s*[:=]\s*/ | /\s+/
+delimiter = @{ (WHITESPACE* ~ (":" | "=") ~ WHITESPACE*) | WHITESPACE+ }
+
+// VALUE: /.+/ (The lookahead logic is handled by the splitter)
+value = @{ ANY+ }
+
+WHITESPACE = _{ " " | "\t" }

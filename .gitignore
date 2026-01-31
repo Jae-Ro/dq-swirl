@@ -209,7 +209,9 @@ __marimo__/
 ## Custom
 # temp
 uv.lock
+cargo.lock
 !.env
+
 secrets.env
 package-lock.json
 

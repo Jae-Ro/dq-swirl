@@ -2,11 +2,12 @@
 
 Agentic Data Quality & Querying
 
-## Quickstart
+## Developer Quickstart
 
 ```bash
 uv venv
 source .venv/bin/activate
+uv tool install maturin
 uv sync --all-groups --extra app --extra worker
 
 docker compose up
