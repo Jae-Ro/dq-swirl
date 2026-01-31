@@ -1,9 +1,6 @@
-# DQ Swirl - Agentic Data Querying
+# DQ Swirl
 
-Team Raft Take Home Challenge
-
-[GH Link](https://gist.github.com/JacobTyo/3d3b0234db222af8195d510b279f96c0)
-
+Agentic Data Quality & Querying
 
 ## Quickstart
 
