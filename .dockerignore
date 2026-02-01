@@ -11,3 +11,4 @@ dist/
 .ruff_cache/
 .rustfs_data/
 .rustfs_logs/
+*.so
