@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use pyo3::types::PyDict; // PyTuple removed here
+use pyo3::types::PyDict;
 use pyo3::IntoPyObject; 
 use pest::Parser;
 use pest_derive::Parser;
@@ -24,6 +24,8 @@ pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<P
         Regex::new(r"(?:,\s*|\s+)[a-zA-Z_]\w*\s*[:=]").unwrap()
     });
 
+    // We process the strings in parallel. 
+    // The keys are lowercased here to distribute the workload.
     let processed_data: Vec<(String, Vec<(String, String)>, Vec<String>)> = py.detach(|| {
         logs.par_iter()
             .map(|raw_str| {
@@ -50,7 +52,8 @@ pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<P
                         let pair = pairs.next().unwrap();
                         let mut inner = pair.into_inner();
                         
-                        let k = inner.next().unwrap().as_str().to_string();
+                        // KEY NORMALIZATION: to_lowercase() called here
+                        let k = inner.next().unwrap().as_str().to_lowercase();
                         let _delim = inner.next().unwrap();
                         
                         let v = inner.next()
@@ -76,13 +79,14 @@ pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<P
     for (original_str, pairs, unparsed) in processed_data {
         let dict = PyDict::new(py);
         for (k, v) in pairs {
+            // Keys are already lowercase from the parallel step
             let _ = dict.set_item(k, v);
         }
         if !unparsed.is_empty() {
             let _ = dict.set_item("_unparsed", unparsed.join(" "));
         }
         
-        // Convert the Rust tuple (String, Bound<PyDict>) into a Python tuple
+        // Wrap the original log and the parsed dict into a Python tuple
         let log_tuple = (original_str, dict).into_pyobject(py)?;
         results.push(log_tuple.into_any().unbind());
     }

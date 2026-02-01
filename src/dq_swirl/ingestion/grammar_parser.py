@@ -23,7 +23,8 @@ class KeyValueTransformer(Transformer):
         :param value: content following the delimiter, defaults to None
         :return: tuple containing the string key and its cleaned value or "None"
         """
-        k = str(key)
+        # enforce lowercase fields
+        k = str(key).lower()
         v = "None"
         if value:
             v = str(value).rstrip(",").strip()
