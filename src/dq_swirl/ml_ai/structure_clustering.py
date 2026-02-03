@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, TypedDict
 
 from sklearn.cluster import HDBSCAN
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -11,8 +10,7 @@ from dq_swirl.ingestion.structure_analyzer import SignatureEntry
 #################################################################################
 
 
-@dataclass(slots=True)
-class StructClusterData:
+class StructClusterData(TypedDict):
     cluster_id: int
     fields: List[str]
     signature_hash: str
@@ -49,7 +47,6 @@ class StructureClusterer:
             min_cluster_size=self.min_cluster_size,
             metric=self.distance_metric,
             copy=True,
-            prediction_data=True,
         )
 
     def _to_text(self, signature_dict: Dict[str, Any]) -> str:
@@ -71,7 +68,7 @@ class StructureClusterer:
         """
         hashes = list(registry_map.keys())
         signatures_as_text = [
-            self._to_text(val.signature) for val in registry_map.values()
+            self._to_text(val["signature"]) for val in registry_map.values()
         ]
 
         matrix = self.vectorizer.fit_transform(signatures_as_text)
@@ -82,11 +79,11 @@ class StructureClusterer:
         conjoined_map = {}
         for i, cluster_id in enumerate(labels):
             h = hashes[i]
-            conjoined_map[h] = StructClusterData(
-                cluster_id=int(cluster_id),
-                fields=list(registry_map[h].signature.keys()),
-                signature_hash=h,
-                is_outlier=bool(cluster_id == -1),
-            )
+            conjoined_map[h] = {
+                "cluster_id": str(cluster_id),
+                "fields": list(registry_map[h]["signature"].keys()),
+                "signature_hash": h,
+                "is_outlier": bool(cluster_id == -1),
+            }
 
         return conjoined_map

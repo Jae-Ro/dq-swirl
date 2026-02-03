@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, TypedDict
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -15,9 +14,8 @@ transformers_logging.set_verbosity_error()
 #################################################################################
 
 
-@dataclass(slots=True)
-class SemanticClusterData:
-    cluster_id: int
+class SemanticClusterData(TypedDict):
+    cluster_id: str
     fields: List[str]
     signature_hash: str
     is_outlier: bool
@@ -74,7 +72,7 @@ class SemanticClusterer:
     def fit_predict(
         self,
         registry_map: Dict[str, SignatureEntry],
-    ) -> Dict[str, SemanticClusterData]:
+    ) -> Dict[str, List[SemanticClusterData]]:
         """_summary_
 
         :param registry_map: _description_
@@ -84,9 +82,10 @@ class SemanticClusterer:
 
         signatures_as_text = []
         for h in hashes:
-            h_dict = dict(registry_map[h].signature)
+            h_dict = dict(registry_map[h]["signature"])
             # remove the 'black hole' field that swallows everything
-            h_dict = {k: v for k, v in h_dict.items() if k != "_unparsed"}
+            # h_dict = {k: v for k, v in h_dict.items() if k != "_unparsed"}
+            h_dict.pop("_unparsed", None)
 
             # sort keys to ensure structural identity regardless of log order
             sorted_keys = sorted(h_dict.keys())
@@ -111,11 +110,15 @@ class SemanticClusterer:
             h = hashes[i]
             # unique IDs to outliers so they don't group into one '-1' bucket
             final_id = int(cluster_id) if cluster_id != -1 else (400 + i)
-            conjoined_map[h] = SemanticClusterData(
-                cluster_id=final_id,
-                fields=list(registry_map[h].signature.keys()),
-                signature_hash=h,
-                is_outlier=bool(cluster_id == -1),
-            )
+            final_id = f"{final_id}"
+
+            record = {
+                "cluster_id": final_id,
+                "fields": list(registry_map[h]["signature"].keys()),
+                "signature_hash": h,
+                "is_outlier": bool(cluster_id == -1),
+            }
+            conjoined_map[final_id] = conjoined_map.get(final_id, [])
+            conjoined_map[final_id].append(record)
 
         return conjoined_map

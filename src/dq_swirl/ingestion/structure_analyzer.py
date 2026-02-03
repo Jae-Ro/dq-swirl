@@ -1,5 +1,4 @@
 import hashlib
-from dataclasses import dataclass
 from typing import Any, Dict, List, TypedDict
 
 
@@ -15,8 +14,7 @@ class RawParsedPair(TypedDict):
     parsed: Dict[str, Any]
 
 
-@dataclass(slots=True)
-class SignatureEntry:
+class SignatureEntry(TypedDict):
     signature: Dict[str, Any]
     records: List[RawParsedPair]
 
@@ -160,12 +158,12 @@ class StructuralAnalyzer:
                 "parsed": parsed_dict,
             }
             if struct_hash not in self.signature_map:
-                self.signature_map[struct_hash] = SignatureEntry(
-                    signature=typed_map,
-                    records=[new_record],
-                )
+                self.signature_map[struct_hash] = {
+                    "signature": typed_map,
+                    "records": [new_record],
+                }
             else:
-                self.signature_map[struct_hash].records.append(new_record)
+                self.signature_map[struct_hash]["records"].append(new_record)
 
         fingerprint: Fingerprint = {
             "hash": struct_hash,
