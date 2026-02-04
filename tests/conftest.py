@@ -16,6 +16,13 @@ DEFAULT_MODEL = os.getenv("LLM_MODEL")
 DEFAULT_LLM_URL = os.getenv("LLM_BASE_URL")
 DEFAULT_LLM_API_KEY = os.getenv("LLM_API_KEY", "123")
 
+
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = os.getenv("REDIS_PORT")
+REDIS_PW = os.getenv("REDIS_PW")
+REDIS_URL = f"redis://:{REDIS_PW}@{REDIS_HOST}:{REDIS_PORT}"
+
+
 LLM_CONFIGS = [
     pytest.param(
         LLMConfig(
@@ -46,7 +53,105 @@ MESSY_SAMPLE_DATA = [
     '{"id": "usr_005", "name": "Broken Record", "email": "broken@example.com"}',
 ]
 
+ETL_LOOKUP_MAP = {
+    "fd116cd512d5ecd2e59edf12fc258b32": {
+        "semantic_cluster_id": "0",
+        "structure_cluster_id": "0",
+        "base_model_fpath": "data/pipeline_runs/run_20260203-215528/sem_0-order/order_base_model.py",
+        "parser_fpath": "data/pipeline_runs/run_20260203-215528/sem_0-order/order_parser-struct_0.py",
+        "fields": ["order", "buyer", "location", "total", "items"],
+    },
+    "50eb97a85647221ecc7f65f74d68d156": {
+        "semantic_cluster_id": "0",
+        "structure_cluster_id": "0",
+        "base_model_fpath": "data/pipeline_runs/run_20260203-215528/sem_0-order/order_base_model.py",
+        "parser_fpath": "data/pipeline_runs/run_20260203-215528/sem_0-order/order_parser-struct_0.py",
+        "fields": ["order", "buyer", "total", "items"],
+    },
+    "28d9f3b14d0e5516a186062212502d0c": {
+        "semantic_cluster_id": "0",
+        "structure_cluster_id": "0",
+        "base_model_fpath": "data/pipeline_runs/run_20260203-215528/sem_0-order/order_base_model.py",
+        "parser_fpath": "data/pipeline_runs/run_20260203-215528/sem_0-order/order_parser-struct_0.py",
+        "fields": ["order", "buyer", "locadtion", "total", "items"],
+    },
+    "b441fd0cc9071e4311f67a792a309a9c": {
+        "semantic_cluster_id": "1",
+        "structure_cluster_id": "1",
+        "base_model_fpath": "data/pipeline_runs/run_20260203-215528/sem_1-user/user_base_model.py",
+        "parser_fpath": "data/pipeline_runs/run_20260203-215528/sem_1-user/user_parser-struct_1.py",
+        "fields": ["createdat", "id", "isactive", "name", "role"],
+    },
+    "fb00b9735a7c3887cb459047473c541c": {
+        "semantic_cluster_id": "1",
+        "structure_cluster_id": "1",
+        "base_model_fpath": "data/pipeline_runs/run_20260203-215528/sem_1-user/user_base_model.py",
+        "parser_fpath": "data/pipeline_runs/run_20260203-215528/sem_1-user/user_parser-struct_1.py",
+        "fields": [
+            "createdat",
+            "email",
+            "id",
+            "isactive",
+            "lastloginip",
+            "name",
+            "role",
+        ],
+    },
+    "4727360ea96dc2ded6d762f08cb6fbc1": {
+        "semantic_cluster_id": "1",
+        "structure_cluster_id": "1",
+        "base_model_fpath": "data/pipeline_runs/run_20260203-215528/sem_1-user/user_base_model.py",
+        "parser_fpath": "data/pipeline_runs/run_20260203-215528/sem_1-user/user_parser-struct_1.py",
+        "fields": ["createdat", "email", "id", "isactive", "role"],
+    },
+    "d6b88dcbee3611198395069946d9f5fe": {
+        "semantic_cluster_id": "1",
+        "structure_cluster_id": "1",
+        "base_model_fpath": "data/pipeline_runs/run_20260203-215528/sem_1-user/user_base_model.py",
+        "parser_fpath": "data/pipeline_runs/run_20260203-215528/sem_1-user/user_parser-struct_1.py",
+        "fields": ["createdat", "email", "id", "isactive", "name"],
+    },
+    "d2d16f7c3698c6195ddaeb6205139150": {
+        "semantic_cluster_id": "1",
+        "structure_cluster_id": "1",
+        "base_model_fpath": "data/pipeline_runs/run_20260203-215528/sem_1-user/user_base_model.py",
+        "parser_fpath": "data/pipeline_runs/run_20260203-215528/sem_1-user/user_parser-struct_1.py",
+        "fields": ["email", "id", "name"],
+    },
+}
+
+
+CLUSTER_SETS = {
+    "0": [
+        "fd116cd512d5ecd2e59edf12fc258b32",
+        "50eb97a85647221ecc7f65f74d68d156",
+        "28d9f3b14d0e5516a186062212502d0c",
+    ],
+    "1": [
+        "b441fd0cc9071e4311f67a792a309a9c",
+        "fb00b9735a7c3887cb459047473c541c",
+        "4727360ea96dc2ded6d762f08cb6fbc1",
+        "d6b88dcbee3611198395069946d9f5fe",
+        "d2d16f7c3698c6195ddaeb6205139150",
+    ],
+}
+
+
+@pytest.fixture(scope="class")
+def redis_url() -> str:
+    return REDIS_URL
+
 
 @pytest.fixture(scope="class")
 def messy_data() -> List[str]:
     return MESSY_SAMPLE_DATA
+
+
+@pytest.fixture(scope="class")
+def etl_lookup_map():
+    return ETL_LOOKUP_MAP
+
+
+@pytest.fixture(scope="class")
+def cluster_sets():
+    return CLUSTER_SETS
