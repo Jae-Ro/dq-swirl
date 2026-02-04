@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
-import redis.asyncio as redis
 from pydantic import BaseModel
+from redis.asyncio import Redis
 
 GET_SIBLINGS_LUA = """
 local meta_raw = redis.call('HGET', KEYS[1], ARGV[1])
@@ -42,12 +42,12 @@ class SignatureMetadata(BaseModel):
 class SignatureRegistry:
     def __init__(
         self,
-        redis_url: Optional[str] = None,
+        redis: Optional[Redis] = None,
         namespace: str = "etl",
     ) -> None:
         """_summary_
 
-        :param redis_url: _description_, defaults to None
+        :param redis: _description_, defaults to None
         :param namespace: _description_, defaults to "etl"
         """
         # no integration
@@ -57,8 +57,8 @@ class SignatureRegistry:
 
         # yes integration
         # TODO: refactor as this is not ideal
-        if redis_url:
-            self.redis = redis.from_url(redis_url, decode_responses=True)
+        if redis:
+            self.redis = redis
             self._lua_get_siblings = self.redis.register_script(GET_SIBLINGS_LUA)
         else:
             self.redis = None

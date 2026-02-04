@@ -16,6 +16,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from litellm import ModelResponse
 from pydantic import BaseModel, Field
+from redis.asyncio import Redis
 
 from dq_swirl.clients.async_llm_client import AsyncLLMClient
 from dq_swirl.ml_ai.clustering import ClusterRecord
@@ -70,7 +71,7 @@ class ETLBuilderAgent:
     def __init__(
         self,
         client: AsyncLLMClient,
-        redis_url: Optional[str] = None,
+        redis: Optional[Redis] = None,
         s3_dirpath: str = "data/pipeline_runs",
         max_attempts: int = 6,
         max_sample_size: int = 100,
@@ -78,7 +79,7 @@ class ETLBuilderAgent:
         """_summary_
 
         :param client: _description_
-        :param redis_url: _description_, defaults to None
+        :param redis: _description_, defaults to None
         :param s3_dirpath: _description_, defaults to "data/pipeline_runs"
         :param max_attempts: _description_, defaults to 6
         :param max_sample_size: _description_, defaults to 100
@@ -87,7 +88,7 @@ class ETLBuilderAgent:
         self.client = client
         self.max_attempts = max_attempts
         self.max_sample_size = max_sample_size
-        self.redis_url = redis_url
+        self.redis = redis
         self.s3_dirpath = s3_dirpath
 
         # build graph at init
@@ -525,15 +526,14 @@ class ETLBuilderAgent:
                 )
 
         # format for lookup
-        registry = SignatureRegistry(redis_url=self.redis_url)
+        registry = SignatureRegistry(redis=self.redis)
         clusters, etl_map = registry.create_etl_lookup(shared_export_map)
 
         # store shared_export_map in redis for lookup if redis provided
-        if self.redis_url:
+        if self.redis:
             await registry.store_etl_lookup(
                 clusters,
                 etl_map,
             )
-            await registry.close()
 
         return clusters, etl_map

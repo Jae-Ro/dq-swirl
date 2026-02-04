@@ -41,7 +41,7 @@ async def startup(ctx: Dict[str, Any]):
     redis_pool = ConnectionPool.from_url(
         redis_url,
         max_connections=20,
-        decode_responses=False,
+        decode_responses=True,
     )
     ctx["redis_pool"] = redis_pool
 

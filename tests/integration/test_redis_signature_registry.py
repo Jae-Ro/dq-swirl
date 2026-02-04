@@ -7,17 +7,11 @@ logger = get_custom_logger()
 class TestRedisSignatureRegistry:
     async def test_signature_registry_create(
         self,
-        redis_url,
+        redis_client,
         etl_lookup_map,
         cluster_sets,
     ) -> None:
-        """_summary_
-
-        :param redis_url: _description_
-        :param etl_lookup_map: _description_
-        :param cluster_sets: _description_
-        """
-        registry = SignatureRegistry(redis_url=redis_url)
+        registry = SignatureRegistry(redis=redis_client)
         # store them
         await registry.store_etl_lookup(etl_lookup_map, cluster_sets)
         # read and validate

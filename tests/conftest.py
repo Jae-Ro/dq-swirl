@@ -4,6 +4,7 @@ from typing import List
 import litellm
 import pytest
 from dotenv import load_dotenv
+from redis.asyncio import ConnectionPool, Redis
 
 from dq_swirl.clients.async_llm_client import LLMConfig
 
@@ -21,7 +22,6 @@ REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = os.getenv("REDIS_PORT")
 REDIS_PW = os.getenv("REDIS_PW")
 REDIS_URL = f"redis://:{REDIS_PW}@{REDIS_HOST}:{REDIS_PORT}"
-
 
 LLM_CONFIGS = [
     pytest.param(
@@ -138,11 +138,6 @@ CLUSTER_SETS = {
 
 
 @pytest.fixture(scope="class")
-def redis_url() -> str:
-    return REDIS_URL
-
-
-@pytest.fixture(scope="class")
 def messy_data() -> List[str]:
     return MESSY_SAMPLE_DATA
 
@@ -155,3 +150,24 @@ def etl_lookup_map():
 @pytest.fixture(scope="class")
 def cluster_sets():
     return CLUSTER_SETS
+
+
+@pytest.fixture(scope="session")
+async def redis_pool():
+    pool = ConnectionPool.from_url(
+        REDIS_URL,
+        max_connections=2,
+        decode_responses=True,
+    )
+    yield pool
+
+    # teardown: close the pool when the session ends
+    await pool.aclose()
+
+
+@pytest.fixture(scope="session")
+async def redis_client(redis_pool):
+    client = Redis(connection_pool=redis_pool)
+    yield client
+    # teardown
+    await client.aclose()
