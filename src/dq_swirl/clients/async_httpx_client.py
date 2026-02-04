@@ -52,5 +52,6 @@ async def create_async_httpx_client_pool(
         event_hooks={
             "response": [log_response_info],
         },
+        follow_redirects=True,
     )
     return pool
