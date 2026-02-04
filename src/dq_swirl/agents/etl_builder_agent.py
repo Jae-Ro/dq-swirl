@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 
 from dq_swirl.clients.async_llm_client import AsyncLLMClient
 from dq_swirl.ml_ai.clustering import ClusterRecord
+from dq_swirl.persistence.signature_registry import ETLMap, SignatureRegistry
 from dq_swirl.prompts.etl_builder_prompts import (
     ARCHITECT_PROMPT,
     CODE_EXECUTION_PROMPT,
@@ -30,14 +31,6 @@ from dq_swirl.utils.log_utils import get_custom_logger
 logger = get_custom_logger()
 
 
-class ETLMap(TypedDict):
-    semantic_cluster_id: str
-    structure_cluster_id: str
-    base_model_fpath: str
-    parser_fpath: str
-    fields: List[str]
-
-
 def prepause(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
@@ -45,41 +38,6 @@ def prepause(func):
         return await func(*args, **kwargs)
 
     return wrapper
-
-
-def create_etl_lookup(
-    export_map: Dict[str, Any],
-) -> Tuple[Dict[str, List[str]], Dict[str, ETLMap]]:
-    """_summary_
-
-    :param export_map: _description_
-    :return: _description_
-    """
-    metadata_map = {}
-    cluster_sets = {}
-
-    for sem_id, cluster_dict in export_map.items():
-        base_fpath = cluster_dict["base_model_fpath"]
-
-        for struct_cluster in cluster_dict["structure_clusters"]:
-            struct_id = struct_cluster["id"]
-            parser_fpath = struct_cluster["parser_fpath"]
-            records = struct_cluster["struct_records"]
-
-            all_signs = [rec["signature_hash"] for rec in records]
-            cluster_sets[struct_id] = all_signs
-
-            for struct_dict in records:
-                sign = struct_dict["signature_hash"]
-                metadata_map[sign] = {
-                    "semantic_cluster_id": sem_id,
-                    "structure_cluster_id": struct_id,
-                    "base_fpath": base_fpath,
-                    "parser_fpath": parser_fpath,
-                    "fields": struct_dict["fields"],
-                }
-
-    return metadata_map, cluster_sets
 
 
 class ModelResponseStructure(BaseModel):
@@ -112,12 +70,16 @@ class ETLBuilderAgent:
     def __init__(
         self,
         client: AsyncLLMClient,
+        redis_url: Optional[str] = None,
+        s3_dirpath: str = "data/pipeline_runs",
         max_attempts: int = 6,
         max_sample_size: int = 100,
     ) -> None:
         """_summary_
 
         :param client: _description_
+        :param redis_url: _description_, defaults to None
+        :param s3_dirpath: _description_, defaults to "data/pipeline_runs"
         :param max_attempts: _description_, defaults to 6
         :param max_sample_size: _description_, defaults to 100
         """
@@ -125,6 +87,8 @@ class ETLBuilderAgent:
         self.client = client
         self.max_attempts = max_attempts
         self.max_sample_size = max_sample_size
+        self.redis_url = redis_url
+        self.s3_dirpath = s3_dirpath
 
         # build graph at init
         self.graph = self._build_graph()
@@ -393,7 +357,7 @@ class ETLBuilderAgent:
         export_map = state.get("export_map", {})
 
         # make the directory
-        dir_name = "data/pipeline_runs"
+        dir_name = self.s3_dirpath
         dir_name = os.path.join(
             dir_name,
             self.run_id,
@@ -510,7 +474,9 @@ class ETLBuilderAgent:
         return "coder"
 
     async def run(
-        self, cluster_dict: Dict[str, List[ClusterRecord]], run_id: Optional[str] = None
+        self,
+        cluster_dict: Dict[str, List[ClusterRecord]],
+        run_id: Optional[str] = None,
     ) -> Tuple[Dict[str, List[str]], Dict[str, ETLMap]]:
         """_summary_
 
@@ -558,4 +524,15 @@ class ETLBuilderAgent:
                     f"--- Finished Sem{sem_id}-Struct{struct_id} ---\n{json.dumps(shared_export_map, indent=4)}"
                 )
 
-        return create_etl_lookup(shared_export_map)
+        # format for lookup
+        registry = SignatureRegistry(redis_url=self.redis_url)
+        clusters, etl_map = registry.create_etl_lookup(shared_export_map)
+
+        # store shared_export_map in redis for lookup if redis provided
+        if self.redis_url:
+            await registry.store_etl_lookup(
+                clusters,
+                etl_map,
+            )
+
+        return clusters, etl_map
