@@ -51,16 +51,8 @@ class DQAgentOrchestrator:
         http_client: Optional[AsyncHttpxClient] = None,
         embedding_model: EmbeddingModel | str = "all-MiniLM-L6-v2",
         max_attempts: int = 3,
+        sample_count: int = 100,
     ) -> None:
-        """_summary_
-
-        :param client: _description_
-        :param redis: _description_, defaults to None
-        :param s3_dirpath: _description_, defaults to "data/pipeline_runs"
-        :param http_client: _description_, defaults to None
-        :param embedding_model: _description_, defaults to "all-MiniLM-L6-v2"
-        :param max_attempts: _description_, defaults to 3
-        """
         self.client = client
         self.redis = redis
         self.s3_dirpath = s3_dirpath
@@ -85,6 +77,9 @@ class DQAgentOrchestrator:
 
         # build graph
         self.graph = self._build_graph()
+
+        # number of times to sample
+        self.sample_count = sample_count
 
     def create_run_id(self) -> str:
         # current datetime
@@ -152,15 +147,31 @@ class DQAgentOrchestrator:
 
     async def data_sourcer(self, state: AgentOrchestratorState) -> Dict[str, Any]:
         req_config = state["request_config"]
+        data_key = state["data_key"]
+
         try:
-            res = await self.http_client.request(
-                req_config["url"],
-                method=req_config["method"],
-                request_body=req_config["request_body"],
-            )
-            logger.debug(f"Result: {res}")
+            result = set()
+            for _ in range(self.sample_count):
+                try:
+                    res = await self.http_client.request(
+                        req_config["url"],
+                        method=req_config["method"],
+                        request_body=req_config["request_body"],
+                    )
+                    for rec_str in res[data_key]:
+                        result.add(rec_str)
+
+                except Exception:
+                    pass
+
+            result = {
+                data_key: list(result),
+            }
+
+            logger.debug(json.dumps(result, indent=4))
+
             return {
-                "step_result": res,
+                "step_result": result,
                 "error": None,
             }
         except Exception as e:
@@ -337,7 +348,7 @@ class DQAgentOrchestrator:
                 for res in res_li:
                     result.append(res_li)
 
-            logger.debug(f"PARSED DATA RESULT:\n{result}")
+            logger.debug(f"PARSED DATA RESULT:\n{json.dumps(result, indent=4)}")
 
             return {
                 "step_result": result,
