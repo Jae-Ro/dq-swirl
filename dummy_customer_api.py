@@ -1,9 +1,8 @@
-# file: dummy_customer_api.py
 import random
 
-from flask import Flask, jsonify, request
+from quart import Quart, jsonify, request
 
-app = Flask(__name__)
+app = Quart(__name__)
 
 # simulate messy unstructured text responses
 ORDERS = [
@@ -16,7 +15,7 @@ ORDERS = [
 
 
 @app.route("/api/orders", methods=["GET"])
-def get_orders():
+async def get_orders():
     """
     Returns orders as messy text. In real life, customers
     would have unpredictable formatting. The AI must parse it.
@@ -33,7 +32,7 @@ def get_orders():
 
 
 @app.route("/api/order/<order_id>", methods=["GET"])
-def get_order_by_id(order_id):
+async def get_order_by_id(order_id):
     """
     Fetch a single order by scanning the text.
     """
