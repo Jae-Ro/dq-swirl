@@ -123,3 +123,7 @@ class AsyncHttpxClient:
             # closing client if created in method
             if client_created:
                 await http_client.aclose()
+
+    async def aclose(self):
+        if self._client:
+            return await self._client.aclose()

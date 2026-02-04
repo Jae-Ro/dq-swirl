@@ -475,7 +475,8 @@ class ETLBuilderAgent:
         :param run_id: _description_, defaults to None
         :return: _description_
         """
-        if run_id is None:
+        self.run_id = run_id
+        if self.run_id is None:
             # current datetime
             curr_dt_str = datetime.now().strftime("%Y%m%d-%H%M%S")
             self.run_id = f"run_{curr_dt_str}"

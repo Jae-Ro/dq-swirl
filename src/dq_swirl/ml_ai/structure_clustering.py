@@ -67,14 +67,18 @@ class StructureClusterer:
         :return: _description_
         """
         hashes = list(registry_map.keys())
+        n_samples = len(hashes)
+
         signatures_as_text = [
             self._to_text(val["signature"]) for val in registry_map.values()
         ]
 
-        matrix = self.vectorizer.fit_transform(signatures_as_text)
-
         # fit_predict()
-        labels = self.clusterer.fit_predict(matrix.toarray())
+        if n_samples < self.min_cluster_size:
+            labels = [0] * n_samples
+        else:
+            matrix = self.vectorizer.fit_transform(signatures_as_text)
+            labels = self.clusterer.fit_predict(matrix.toarray())
 
         conjoined_map = {}
         for i, cluster_id in enumerate(labels):
