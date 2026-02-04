@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import Any, Dict
 
 import litellm
@@ -57,6 +58,11 @@ async def shutdown(ctx: Dict[str, Any]):
         await ctx["httpx_pool"].aclose()
     if ctx["redis_pool"]:
         await ctx["redis_pool"].aclose()
+
+    # delete cache
+    cwd = os.getcwd()
+    data_cache = os.path.join(cwd, "data")
+    shutil.rmtree(data_cache, ignore_errors=True)
 
 
 async def before_process(ctx: Dict[str, Any]):
