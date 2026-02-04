@@ -65,7 +65,7 @@ class GrammarParser:
             elif isinstance(data, list):
                 # wrap arrays to maintain a KV structure
                 return {"json_data": trimmed}
-        except (json.JSONDecodeError, TypeError):
+        except json.JSONDecodeError, TypeError:
             return None
         return None
 

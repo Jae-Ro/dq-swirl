@@ -11,6 +11,7 @@ from typing import Annotated, Any, AsyncGenerator, Dict, Optional, TypedDict
 import virt_s3
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
+from pydantic import TypeAdapter
 from redis.asyncio import Redis
 
 from dq_swirl.agents.etl_builder_agent import ETLBuilderAgent
@@ -145,6 +146,7 @@ class DQAgentOrchestrator:
 
         return workflow.compile(checkpointer=MemorySaver())
 
+    @prepause
     async def data_sourcer(self, state: AgentOrchestratorState) -> Dict[str, Any]:
         req_config = state["request_config"]
         data_key = state["data_key"]
@@ -346,10 +348,12 @@ class DQAgentOrchestrator:
                 parser_fpath = etl_meta["parser"]
                 parse_func = load_function(parser_fpath, "transform_to_models")
                 res_li = parse_func(data)
+                base_model = load_pydantic_base_models(base_model_local_fpath)
+                _BaseModel = base_model[0]
                 for res in res_li:
-                    result.append(res_li)
-
-            logger.debug(f"PARSED DATA RESULT:\n{json.dumps(result, indent=4)}")
+                    r = _BaseModel(**res)
+                    logger.debug(r.model_dump_json(indent=4))
+                    result.append(r)
 
             return {
                 "step_result": result,
@@ -371,7 +375,7 @@ class DQAgentOrchestrator:
 
     @prepause
     async def query_builder_agent(self, state: AgentOrchestratorState):
-        pass
+        client = self.client
 
     async def validate_query(self, state: AgentOrchestratorState):
         pass
