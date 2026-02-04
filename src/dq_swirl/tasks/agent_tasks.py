@@ -5,7 +5,7 @@ from typing import Any, Dict
 from litellm import ModelResponse
 from redis.asyncio import Redis
 
-from dq_swirl.clients.async_llm_client import AsyncLLMClient
+from dq_swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
 from dq_swirl.tasks.schemas import ChatTaskPayload
 from dq_swirl.utils.log_utils import get_custom_logger
 
@@ -22,9 +22,10 @@ async def run_dq_agent_task(ctx: Dict[str, Any], data: Dict[str, Any]):
 
     req = ChatTaskPayload(**data)
 
+    config = LLMConfig()
+
     llm_client = AsyncLLMClient(
-        model=req.model,
-        api_base=os.getenv("LLM_BASE_URL"),
+        config=config,
     )
     try:
         ## get messages from (user_id, conversation_id)
