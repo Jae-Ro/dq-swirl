@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from redis.asyncio import ConnectionPool, Redis
 from saq import CronJob, Queue
 
-from dq_swirl.clients.async_httpx_client_pool import create_async_httpx_client_pool
+from dq_swirl.clients.async_httpx_client import create_async_httpx_client_pool
 from dq_swirl.tasks.agent_tasks import run_dq_agent_task
 from dq_swirl.utils.log_utils import get_custom_logger
 
@@ -33,8 +33,12 @@ async def startup(ctx: Dict[str, Any]):
 
     # httpx pool
     pool = await create_async_httpx_client_pool()
+
+    # set global litellm settings
     litellm.aclient_session = pool
     litellm.num_retries = 5
+
+    # add httpx pool to context dict
     ctx["httpx_pool"] = pool
 
     # redis pool
@@ -43,6 +47,7 @@ async def startup(ctx: Dict[str, Any]):
         max_connections=20,
         decode_responses=True,
     )
+    # add redis pool to context dict
     ctx["redis_pool"] = redis_pool
 
 

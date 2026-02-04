@@ -1,3 +1,5 @@
+from typing import Any, Dict, Optional
+
 import httpx
 
 from dq_swirl.utils.log_utils import get_custom_logger
@@ -55,3 +57,69 @@ async def create_async_httpx_client_pool(
         follow_redirects=True,
     )
     return pool
+
+
+class AsyncHttpxClient:
+    def __init__(
+        self,
+        pool: Optional[httpx.AsyncClient] = None,
+    ) -> None:
+        self._client = pool
+
+    async def request(
+        self,
+        url: str,
+        method: str = "GET",
+        request_body: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any] | str | Any:
+        """Async method to get data from an http api endpoint
+
+        :param url: api url
+        :param method: HTTP verb method, defaults to "GET"
+        :param request_body: dictionary of request body (converted to query params for GET and JSON body for POST), defaults to None
+        :return: _description_
+        """
+
+        http_client = self._client
+        client_created = False
+
+        # create client if does not exist
+        if not http_client:
+            http_client = await create_async_httpx_client_pool(
+                max_connections=3,
+            )
+            client_created = True
+
+        req_url = url
+        is_get = method.upper() == "GET"
+
+        try:
+            response = await http_client.request(
+                method=method.upper(),
+                url=req_url,
+                params=request_body if is_get else None,
+                json=request_body if not is_get else None,
+            )
+
+            response.raise_for_status()
+
+            content_type = response.headers.get("Content-Type", "")
+            if "application/json" in content_type:
+                return response.json()
+
+            # return the text or raw bytes
+            logger.warning(f"Expected JSON but got {content_type}. Returning raw text.")
+            return response.text
+
+        except httpx.HTTPStatusError as exc:
+            logger.error(
+                f"Error response {exc.response.status_code} while requesting {exc.request.url!r}"
+            )
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error calling {req_url}: {str(e)}")
+            raise
+        finally:
+            # closing client if created in method
+            if client_created:
+                await http_client.aclose()
