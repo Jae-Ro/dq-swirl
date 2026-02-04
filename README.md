@@ -4,6 +4,12 @@ Agentic Data Quality & Querying
 
 ## Developer Quickstart
 
+Add a `secrets.env` file with the following contents at the root of the repo
+```dotenv
+LLM_BASE_URL="https://openrouter.ai/api/v1"
+LLM_API_KEY=<Your API KEY>
+```
+
 ```bash
 uv venv
 source .venv/bin/activate
