@@ -51,8 +51,8 @@ class DQAgentOrchestrator:
         s3_dirpath: str = "data/pipeline_runs",
         http_client: Optional[AsyncHttpxClient] = None,
         embedding_model: EmbeddingModel | str = "all-MiniLM-L6-v2",
-        max_attempts: int = 3,
-        sample_count: int = 100,
+        max_attempts: int = 5,
+        sample_count: int = 10,
     ) -> None:
         self.client = client
         self.redis = redis
@@ -387,6 +387,10 @@ class DQAgentOrchestrator:
     @prepause
     async def query_builder_agent(self, state: AgentOrchestratorState):
         client = self.client
+
+        return {
+            "attempts": 1
+        }
 
     async def validate_query(self, state: AgentOrchestratorState):
         pass
