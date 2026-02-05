@@ -34,6 +34,7 @@ python app/dummy_customer_api.py
 
 Navigate to [http://localhost:3000](http://localhost:3000) and ask your queries there!
 
+![example_query](docs/example.png)
 
 ## Run Test Suite
 While you have docker compose running in one terminal, in another run the following:
