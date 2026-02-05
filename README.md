@@ -44,3 +44,11 @@ pytest -v -s tests/
 
 ## System Architecture
 ![system architecture](docs/sa_diagram.drawio.svg)
+
+
+## Helpful Web Apps
+* RedisInsight: [http://localhost:5540](http://localhost:5540)
+* PgAdmin4: [http://localhost:9090](http://localhost:9090)
+* RustFS: [http://localhost:9001](http://localhost:9001)
+* SAQ Task Queue: [http://localhost:8080](http://localhost:8080)
+
