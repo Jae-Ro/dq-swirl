@@ -32,7 +32,7 @@ After following the Developer Quickstart `docker compose up`, start the dummy cu
 python app/dummy_customer_api.py
 ```
 
-Navigate to [htttp://localhost:3000](htttp://localhost:3000) and ask your queries there!
+Navigate to [http://localhost:3000](http://localhost:3000) and ask your queries there!
 
 
 ## Run Test Suite
