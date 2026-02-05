@@ -31,8 +31,9 @@ class TestDQAgentOrchestrator:
             "request_body": None,
         }
         query = "Show me all orders where the buyer was located in Ohio and total value was over 500"
-        await agent.run(
+        async for chunk in agent.run(
             request_config,
             user_query=query,
             data_key="raw_orders",
-        )
+        ):
+            logger.debug(chunk)

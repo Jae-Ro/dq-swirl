@@ -6,24 +6,27 @@ import os
 import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Any, AsyncGenerator, Dict, Optional, TypedDict
+from typing import Annotated, Any, AsyncGenerator, Dict, List, Optional, TypedDict
 
 import virt_s3
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
-from pydantic import TypeAdapter
+from litellm import ModelResponse
 from redis.asyncio import Redis
 
 from dq_swirl.agents.etl_builder_agent import ETLBuilderAgent
-from dq_swirl.agents.query_builder_agent import QueryBuilderAgent
 from dq_swirl.clients.async_httpx_client import AsyncHttpxClient
 from dq_swirl.clients.async_llm_client import AsyncLLMClient
+from dq_swirl.clients.pg_duckdb_client import PGConfig, PGDuckDBClient
 from dq_swirl.ingestion.rust_ingestion import smart_parse_batch
 from dq_swirl.ingestion.structure_analyzer import StructuralAnalyzer
 from dq_swirl.ml_ai.clustering import ClusterOrchestrator
 from dq_swirl.ml_ai.embedding_model import EmbeddingModel
 from dq_swirl.persistence.signature_registry import SignatureRegistry
+from dq_swirl.prompts.orchestrator_prompts import REASONING_RESPONSE_PROMPT
+from dq_swirl.prompts.sql_gen_prompts import PGDUCKDB_PROMPT
 from dq_swirl.utils.agent_utils import (
+    extract_sql_code,
     load_function,
     load_pydantic_base_models,
     prepause,
@@ -50,15 +53,28 @@ class DQAgentOrchestrator:
         redis: Optional[Redis] = None,
         s3_dirpath: str = "data/pipeline_runs",
         http_client: Optional[AsyncHttpxClient] = None,
+        pg_config: Optional[PGConfig] = None,
         embedding_model: EmbeddingModel | str = "all-MiniLM-L6-v2",
         max_attempts: int = 5,
         sample_count: int = 10,
     ) -> None:
+        """_summary_
+
+        :param client: _description_
+        :param redis: _description_, defaults to None
+        :param s3_dirpath: _description_, defaults to "data/pipeline_runs"
+        :param http_client: _description_, defaults to None
+        :param pg_config: _description_, defaults to None
+        :param embedding_model: _description_, defaults to "all-MiniLM-L6-v2"
+        :param max_attempts: _description_, defaults to 5
+        :param sample_count: _description_, defaults to 10
+        """
         self.client = client
         self.redis = redis
         self.s3_dirpath = s3_dirpath
         self.http_client = http_client
         self.max_attempts = max_attempts
+        self.pg_config = pg_config
 
         self.created_http_client = False
         if not self.http_client:
@@ -72,6 +88,10 @@ class DQAgentOrchestrator:
             max_attempts=self.max_attempts,
         )
 
+        if not self.pg_config:
+            cfg = PGConfig()
+
+        self.pg_client = PGDuckDBClient(cfg)
         self.clusterer = ClusterOrchestrator(embedding_model=embedding_model)
         self.analyzer = StructuralAnalyzer(ignore_unparsed=False)
         self.registry = SignatureRegistry(redis=redis)
@@ -355,8 +375,23 @@ class DQAgentOrchestrator:
                     logger.debug(r.model_dump_json(indent=4))
                     result.append(r)
 
+            # create table & upload data
+            table_name = _BaseModel.__name__.lower()
+            self.pg_client.create_table_from_model(_BaseModel, table_name)
+            self.pg_client.batch_insert_models(
+                table_name,
+                models=result,
+            )
+            # llm sneak peak
+            schema_str = self.pg_client.get_table_schema_description(table_name)
+            logger.debug(f"\n{schema_str}")
+            ret = {
+                "table_name": table_name,
+                "data": result,
+            }
+
             return {
-                "step_result": result,
+                "step_result": ret,
                 "attempt": 1,
                 "error": None,
             }
@@ -386,14 +421,72 @@ class DQAgentOrchestrator:
 
     @prepause
     async def query_builder_agent(self, state: AgentOrchestratorState):
-        client = self.client
+        res_dict = state["step_result"]
+        table_name = res_dict["table_name"]
+        user_query = state["user_query"]
+        schema_info = self.pg_client.get_table_schema_description(table_name)
 
-        return {
-            "attempts": 1
-        }
+        prompt = PGDUCKDB_PROMPT.format(
+            query=user_query,
+            schema_info=schema_info,
+        )
+
+        messages = [
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ]
+
+        buffer = []
+        response = await self.client.chat(
+            messages=messages,
+            stream=True,
+            temperature=0.0,
+        )
+        async for chunk in response:
+            chunk: ModelResponse
+            if chunk.choices and chunk.choices[0].delta.content:
+                content = chunk.choices[0].delta.content
+                buffer.append(content)
+
+        resp = "".join(buffer)
+        code = extract_sql_code(resp)
+
+        try:
+            logger.debug(f"\n{code}")
+            res_data = self.pg_client.query(code)
+            logger.debug(res_data)
+
+            ret = {
+                "sql": code,
+                "data": res_data,
+            }
+            return {
+                "step_result": ret,
+                "attempts": 1,
+            }
+        except Exception as e:
+            logger.error(e)
+            err_msg = traceback.format_exc()
+            return {
+                "error": err_msg,
+                "attempts": 1,
+            }
 
     async def validate_query(self, state: AgentOrchestratorState):
-        pass
+        res = state["step_result"]
+        err_msg = state["error"]
+        attempts = state["attempts"]
+
+        # data sourcer did not work
+        if not res and err_msg:
+            if attempts > self.max_attempts:
+                return "end"
+            return "retry"
+
+        # it worked
+        return "end"
 
     async def run(
         self,
@@ -422,7 +515,37 @@ class DQAgentOrchestrator:
             }
         }
 
-        final_output = await self.graph.ainvoke(initial_state, config)
+        final_state = await self.graph.ainvoke(initial_state, config)
+        ret_dict = final_state["step_result"]
+
+        sql_query = ret_dict["sql"]
+        clean_data: List[dict] = ret_dict["data"]
+
+        yield f"## Queried Data\n```json\n{json.dumps(clean_data, indent=2)}\n```\n"
+
+        prompt = REASONING_RESPONSE_PROMPT.format(
+            query=user_query,
+            sql_query=sql_query,
+            data=json.dumps(clean_data, indent=2),
+        )
+
+        response = await self.client.chat(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            stream=True,
+            temperature=0.0,
+        )
+
+        yield "## Response\n"
+        async for chunk in response:
+            chunk: ModelResponse
+            if chunk.choices and chunk.choices[0].delta.content:
+                content = chunk.choices[0].delta.content
+                yield content
 
         # cleanup
         if self.created_http_client:

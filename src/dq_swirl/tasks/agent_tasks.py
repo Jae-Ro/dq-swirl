@@ -5,6 +5,7 @@ from typing import Any, Dict
 from litellm import ModelResponse
 from redis.asyncio import Redis
 
+from dq_swirl.agents.orchestrator import DQAgentOrchestrator
 from dq_swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
 from dq_swirl.tasks.schemas import ChatTaskPayload
 from dq_swirl.utils.log_utils import get_custom_logger
@@ -27,31 +28,18 @@ async def run_dq_agent_task(ctx: Dict[str, Any], data: Dict[str, Any]):
     llm_client = AsyncLLMClient(
         config=config,
     )
+    user_query = req.prompt
     try:
         ## get messages from (user_id, conversation_id)
 
         ## do work
 
-        ## stream final llm response
-        response = await llm_client.chat(
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant",
-                },
-                {
-                    "role": "user",
-                    "content": req.prompt,
-                },
-            ],
-            stream=True,
+        orchestrator = DQAgentOrchestrator(
+            client=llm_client,
+            redis=redis,
         )
-
-        async for chunk in response:
-            chunk: ModelResponse
-            if chunk.choices and chunk.choices[0].delta.content:
-                content = chunk.choices[0].delta.content
-                await redis.publish(req.pubsub_stream_id, content)
+        async for chunk in orchestrator.run():
+            await redis.publish(req.pubsub_stream_id, chunk)
 
     except Exception as e:
         logger.exception(e)
