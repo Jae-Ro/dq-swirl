@@ -11,7 +11,7 @@ class EmbeddingModel(Protocol):
         pass
 
 
-def load_sentence_transformer(model_name: str) -> EmbeddingModel:
+def load_sentence_transformer(model_name: str, **kwargs) -> EmbeddingModel:
     from sentence_transformers import SentenceTransformer
 
-    return SentenceTransformer(model_name)
+    return SentenceTransformer(model_name, **kwargs)
