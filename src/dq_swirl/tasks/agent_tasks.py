@@ -35,9 +35,9 @@ async def run_dq_agent_task(ctx: Dict[str, Any], data: Dict[str, Any]):
         prompt_token_count = get_token_count(user_query)
         # TODO: don't hardcode this but make configurable
         if prompt_token_count > 1024:
-            raise Exception(
-                "Sorry, too many tokens in input prompt. Please try again with a shorter prompt!"
-            )
+            msg = "Sorry, too many tokens in input prompt. Please try again with a shorter prompt!"
+            await redis.publish(req.pubsub_stream_id, f"{msg}")
+            raise Exception(msg)
 
         ## get messages from (user_id, conversation_id)
 
