@@ -90,6 +90,7 @@ services:
       POSTGRES_USER: app_developer
       POSTGRES_PASSWORD: password
       POSTGRES_DB: store
+    command: ["postgres", "-c", "shared_preload_libraries=pg_duckdb"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready --username=app_developer --dbname=store"]
       interval: 30s

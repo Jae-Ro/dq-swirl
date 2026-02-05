@@ -42,6 +42,5 @@ pytest -v -s tests/
 ```
 
 
-
 ## System Architecture
 ![system architecture](docs/sa_diagram.drawio.svg)

@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from redis.asyncio import ConnectionPool, Redis
 
 from dq_swirl.clients.async_llm_client import LLMConfig
+from dq_swirl.clients.pg_duckdb_client import PGConfig
 
 load_dotenv("secrets.env")
 load_dotenv(".env")
@@ -171,3 +172,8 @@ async def redis_client(redis_pool):
     yield client
     # teardown
     await client.aclose()
+
+
+@pytest.fixture(scope="session")
+def pg_config() -> PGConfig:
+    return PGConfig()
