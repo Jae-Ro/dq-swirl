@@ -8,6 +8,7 @@ from redis.asyncio import Redis
 from dq_swirl.agents.orchestrator import DQAgentOrchestrator
 from dq_swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
 from dq_swirl.tasks.schemas import ChatTaskPayload
+from dq_swirl.utils.agent_utils import get_token_count
 from dq_swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
@@ -30,6 +31,14 @@ async def run_dq_agent_task(ctx: Dict[str, Any], data: Dict[str, Any]):
     )
     user_query = req.prompt
     try:
+        # check token count
+        prompt_token_count = get_token_count(user_query)
+        # TODO: don't hardcode this but make configurable
+        if prompt_token_count > 1024:
+            raise Exception(
+                "Sorry, too many tokens in input prompt. Please try again with a shorter prompt!"
+            )
+
         ## get messages from (user_id, conversation_id)
 
         ## do work

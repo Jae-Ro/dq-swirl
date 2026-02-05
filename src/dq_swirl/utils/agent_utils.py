@@ -7,6 +7,7 @@ from functools import wraps
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
+import tiktoken
 from pydantic import BaseModel, Field
 
 from dq_swirl.utils.log_utils import get_custom_logger
@@ -92,12 +93,7 @@ def load_pydantic_base_models(file_path: str) -> List[Type[BaseModel]]:
     return models
 
 
-# for hash_signature, records in new_analyzer.signature_map.items():
-#     hash_dict = signature_map[hash_signature]
-#     function_fpath = hash_dict["parser_fpath"]
-#     transform_func = load_function(function_fpath, "transform_to_models")
-#     raw_recrods = [r["raw"] for r in records["records"]]
-#     parsed_records = [r["parsed"] for r in records["records"]]
-#     logger.debug(f"BEFORE: {json.dumps(raw_recrods, indent=2)}")
-#     result = transform_func(parsed_records)
-#     logger.debug(f"AFTER: {json.dumps(result, indent=2)}")
+def get_token_count(text: str, model_name: str = "gpt-4o") -> int:
+    encoding = tiktoken.encoding_for_model(model_name)
+    tokens = encoding.encode(text)
+    return len(tokens)
