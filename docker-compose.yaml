@@ -18,7 +18,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       AWS_ACCESS_KEY_ID: admin
       AWS_REGION: us-east-1
-    restart: unless-stopped
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
       interval: 30s
@@ -37,7 +37,7 @@ services:
     image: app-customer:latest
     entrypoint: ["hypercorn", "app/dummy_customer_api:app", "--bind", "0.0.0.0:5001", "--reload"]
     ports: ["5001:5001"]
-    restart: unless-stopped
+    restart: always
     volumes:
       - ./app/:/app/app/
   
@@ -62,7 +62,7 @@ services:
       AWS_REGION: us-east-1
       POSTGRES_HOST: postgres
       
-    restart: unless-stopped
+    restart: always
     volumes:
       - ./src/:/app/src/
       - ./worker/:/app/worker/
@@ -77,7 +77,7 @@ services:
     ports: ["3000:80"]
     environment:
       VITE_API_URL: http://app-backend:5000
-    restart: unless-stopped
+    restart: always
     
   
   redis:
@@ -90,7 +90,7 @@ services:
   redis-insight:
     container_name: redis-insight
     image: redis/redisinsight:latest
-    restart: unless-stopped
+    restart: always
     ports: ["5540:5540"]
     depends_on:
       - redis
@@ -116,7 +116,7 @@ services:
   pgadmin4:
     container_name: pgadmin4
     image: elestio/pgadmin:latest
-    restart: unless-stopped
+    restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: password
@@ -126,7 +126,7 @@ services:
   s3:
     container_name: s3
     image: rustfs/rustfs:latest
-    restart: unless-stopped
+    restart: always
     ports:
       - "9000:9000"
       - "9001:9001"
