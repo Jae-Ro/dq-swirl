@@ -20,7 +20,6 @@ RUN uv venv
 
 COPY worker/ ./worker/
 COPY src/ ./src/
-COPY rust/ ./rust/
 COPY pyproject.toml Cargo.toml README.md ./
 
 RUN uv tool install maturin
