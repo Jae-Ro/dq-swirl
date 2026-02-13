@@ -1,6 +1,6 @@
 # 🌀 Swirl
 
-Agentic Data Quality & Querying
+A Swirl of Agentic ETL & Querying
 
 ## Developer Quickstart
 
