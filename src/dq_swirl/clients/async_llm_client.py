@@ -5,7 +5,7 @@ from typing import AsyncIterable, Dict, List, Optional
 import litellm
 from litellm import ModelResponse
 
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

@@ -1,4 +1,4 @@
-from dq_swirl.clients.async_httpx_client import AsyncHttpxClient
+from swirl.clients.async_httpx_client import AsyncHttpxClient
 
 
 class TestAsyncHTTPXClient:

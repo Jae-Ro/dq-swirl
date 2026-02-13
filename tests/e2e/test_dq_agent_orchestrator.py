@@ -3,10 +3,10 @@ from typing import List
 import pytest
 from redis.asyncio import Redis
 
-from dq_swirl.agents.orchestrator import DQAgentOrchestrator
-from dq_swirl.clients.async_httpx_client import AsyncHttpxClient
-from dq_swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.agents.orchestrator import DQAgentOrchestrator
+from swirl.clients.async_httpx_client import AsyncHttpxClient
+from swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
+from swirl.utils.log_utils import get_custom_logger
 from tests.conftest import LLM_CONFIGS
 
 logger = get_custom_logger()

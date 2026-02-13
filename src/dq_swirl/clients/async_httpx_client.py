@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

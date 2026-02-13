@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Tuple, TypedDict
 from sklearn.cluster import HDBSCAN
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from dq_swirl.ingestion.structure_analyzer import SignatureEntry
+from swirl.ingestion.structure_analyzer import SignatureEntry
 
 #################################################################################
 ############################# Structural Clustering #############################

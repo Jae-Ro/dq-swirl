@@ -6,8 +6,8 @@ import pytest
 from dotenv import load_dotenv
 from redis.asyncio import ConnectionPool, Redis
 
-from dq_swirl.clients.async_llm_client import LLMConfig
-from dq_swirl.clients.pg_duckdb_client import PGConfig
+from swirl.clients.async_llm_client import LLMConfig
+from swirl.clients.pg_duckdb_client import PGConfig
 
 load_dotenv("secrets.env")
 load_dotenv(".env")

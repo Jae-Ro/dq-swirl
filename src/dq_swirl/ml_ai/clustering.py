@@ -1,10 +1,10 @@
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Tuple
 
-from dq_swirl.ingestion.structure_analyzer import SignatureEntry
-from dq_swirl.ml_ai.embedding_model import EmbeddingModel
-from dq_swirl.ml_ai.semantic_clustering import SemanticClusterer
-from dq_swirl.ml_ai.structure_clustering import StructureClusterer
+from swirl.ingestion.structure_analyzer import SignatureEntry
+from swirl.ml_ai.embedding_model import EmbeddingModel
+from swirl.ml_ai.semantic_clustering import SemanticClusterer
+from swirl.ml_ai.structure_clustering import StructureClusterer
 
 
 @dataclass(slots=True)

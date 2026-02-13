@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Type
 import tiktoken
 from pydantic import BaseModel, Field
 
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

@@ -1,8 +1,8 @@
 import pytest
 from litellm import ModelResponse
 
-from dq_swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
+from swirl.utils.log_utils import get_custom_logger
 from tests.conftest import LLM_CONFIGS
 
 logger = get_custom_logger()

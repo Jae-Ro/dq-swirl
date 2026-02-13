@@ -7,10 +7,10 @@ from dotenv import load_dotenv
 from redis.asyncio import ConnectionPool, Redis
 from saq import CronJob, Queue
 
-from dq_swirl.clients.async_httpx_client import create_async_httpx_client_pool
-from dq_swirl.ml_ai.embedding_model import load_sentence_transformer
-from dq_swirl.tasks.agent_tasks import run_dq_agent_task
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.clients.async_httpx_client import create_async_httpx_client_pool
+from swirl.ml_ai.embedding_model import load_sentence_transformer
+from swirl.tasks.agent_tasks import run_dq_agent_task
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

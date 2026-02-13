@@ -15,16 +15,16 @@ from litellm import ModelResponse
 from pydantic import BaseModel, Field
 from redis.asyncio import Redis
 
-from dq_swirl.clients.async_llm_client import AsyncLLMClient
-from dq_swirl.ml_ai.clustering import ClusterRecord
-from dq_swirl.persistence.signature_registry import ETLMap, SignatureRegistry
-from dq_swirl.prompts.etl_builder_prompts import (
+from swirl.clients.async_llm_client import AsyncLLMClient
+from swirl.ml_ai.clustering import ClusterRecord
+from swirl.persistence.signature_registry import ETLMap, SignatureRegistry
+from swirl.prompts.etl_builder_prompts import (
     ARCHITECT_PROMPT,
     CODE_EXECUTION_PROMPT,
     CODER_PROMPT,
 )
-from dq_swirl.utils.agent_utils import extract_python_code, prepause
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.utils.agent_utils import extract_python_code, prepause
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

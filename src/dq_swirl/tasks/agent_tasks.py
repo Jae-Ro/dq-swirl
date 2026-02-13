@@ -5,11 +5,11 @@ from typing import Any, Dict
 from litellm import ModelResponse
 from redis.asyncio import Redis
 
-from dq_swirl.agents.orchestrator import DQAgentOrchestrator
-from dq_swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
-from dq_swirl.tasks.schemas import ChatTaskPayload
-from dq_swirl.utils.agent_utils import get_token_count
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.agents.orchestrator import DQAgentOrchestrator
+from swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
+from swirl.tasks.schemas import ChatTaskPayload
+from swirl.utils.agent_utils import get_token_count
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

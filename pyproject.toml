@@ -1,5 +1,5 @@
 [project]
-name = "dq-swirl"
+name = "swirl"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -49,7 +49,7 @@ worker = [
 ]
 
 [project.scripts]
-swirl = "dq_swirl:hello"
+swirl = "swirl:hello"
 
 [tool.uv]
 default-groups = []
@@ -60,9 +60,9 @@ build-backend = "maturin"
 
 [tool.maturin]
 python-source = "src" 
-module-name = "dq_swirl.ingestion.rust_ingestion"
+module-name = "swirl.ingestion.rust_ingestion"
 features = ["pyo3/extension-module"]
-include = ["src/dq_swirl/ingestion/*.pyi"]
+include = ["src/swirl/ingestion/*.pyi"]
 
 [tool.ruff]
 exclude = [

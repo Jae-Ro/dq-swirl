@@ -14,24 +14,24 @@ from langgraph.graph import END, START, StateGraph
 from litellm import ModelResponse
 from redis.asyncio import Redis
 
-from dq_swirl.agents.etl_builder_agent import ETLBuilderAgent
-from dq_swirl.clients.async_httpx_client import AsyncHttpxClient
-from dq_swirl.clients.async_llm_client import AsyncLLMClient
-from dq_swirl.clients.pg_duckdb_client import PGConfig, PGDuckDBClient
-from dq_swirl.ingestion.rust_ingestion import smart_parse_batch
-from dq_swirl.ingestion.structure_analyzer import StructuralAnalyzer
-from dq_swirl.ml_ai.clustering import ClusterOrchestrator
-from dq_swirl.ml_ai.embedding_model import EmbeddingModel
-from dq_swirl.persistence.signature_registry import SignatureRegistry
-from dq_swirl.prompts.orchestrator_prompts import REASONING_RESPONSE_PROMPT
-from dq_swirl.prompts.sql_gen_prompts import PGDUCKDB_PROMPT
-from dq_swirl.utils.agent_utils import (
+from swirl.agents.etl_builder_agent import ETLBuilderAgent
+from swirl.clients.async_httpx_client import AsyncHttpxClient
+from swirl.clients.async_llm_client import AsyncLLMClient
+from swirl.clients.pg_duckdb_client import PGConfig, PGDuckDBClient
+from swirl.ingestion.rust_ingestion import smart_parse_batch
+from swirl.ingestion.structure_analyzer import StructuralAnalyzer
+from swirl.ml_ai.clustering import ClusterOrchestrator
+from swirl.ml_ai.embedding_model import EmbeddingModel
+from swirl.persistence.signature_registry import SignatureRegistry
+from swirl.prompts.orchestrator_prompts import REASONING_RESPONSE_PROMPT
+from swirl.prompts.sql_gen_prompts import PGDUCKDB_PROMPT
+from swirl.utils.agent_utils import (
     extract_sql_code,
     load_function,
     load_pydantic_base_models,
     prepause,
 )
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

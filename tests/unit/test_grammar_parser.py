@@ -1,7 +1,7 @@
 from typing import List
 
-from dq_swirl.ingestion.rust_ingestion import smart_parse_batch
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.ingestion.rust_ingestion import smart_parse_batch
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

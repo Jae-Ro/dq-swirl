@@ -11,7 +11,7 @@ from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

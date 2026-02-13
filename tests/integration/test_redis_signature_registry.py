@@ -1,5 +1,5 @@
-from dq_swirl.persistence.signature_registry import SignatureMetadata, SignatureRegistry
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.persistence.signature_registry import SignatureMetadata, SignatureRegistry
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

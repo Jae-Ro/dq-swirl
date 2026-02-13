@@ -4,8 +4,8 @@ import numpy as np
 from sklearn.cluster import HDBSCAN
 from transformers import logging as transformers_logging
 
-from dq_swirl.ingestion.structure_analyzer import SignatureEntry
-from dq_swirl.ml_ai.embedding_model import EmbeddingModel, load_sentence_transformer
+from swirl.ingestion.structure_analyzer import SignatureEntry
+from swirl.ml_ai.embedding_model import EmbeddingModel, load_sentence_transformer
 
 transformers_logging.set_verbosity_error()
 

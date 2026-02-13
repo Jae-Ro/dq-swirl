@@ -13,8 +13,8 @@ from quart_cors import cors
 from redis.asyncio import from_url
 from saq import Queue
 
-from dq_swirl.tasks.schemas import ChatTaskPayload, CleanupTaskPayload
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.tasks.schemas import ChatTaskPayload, CleanupTaskPayload
+from swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
 

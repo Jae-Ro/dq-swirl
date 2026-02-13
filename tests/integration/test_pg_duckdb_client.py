@@ -1,4 +1,4 @@
-from dq_swirl.clients.pg_duckdb_client import PGConfig, PGDuckDBClient
+from swirl.clients.pg_duckdb_client import PGConfig, PGDuckDBClient
 
 
 class TestPGDuckDBClient:

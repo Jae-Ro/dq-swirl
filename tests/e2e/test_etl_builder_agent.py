@@ -6,12 +6,12 @@ from typing import List
 import pytest
 from dotenv import load_dotenv
 
-from dq_swirl.agents.etl_builder_agent import ETLBuilderAgent
-from dq_swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
-from dq_swirl.ingestion.rust_ingestion import smart_parse_batch
-from dq_swirl.ingestion.structure_analyzer import StructuralAnalyzer
-from dq_swirl.ml_ai.clustering import ClusterOrchestrator
-from dq_swirl.utils.log_utils import get_custom_logger
+from swirl.agents.etl_builder_agent import ETLBuilderAgent
+from swirl.clients.async_llm_client import AsyncLLMClient, LLMConfig
+from swirl.ingestion.rust_ingestion import smart_parse_batch
+from swirl.ingestion.structure_analyzer import StructuralAnalyzer
+from swirl.ml_ai.clustering import ClusterOrchestrator
+from swirl.utils.log_utils import get_custom_logger
 from tests.conftest import LLM_CONFIGS
 
 load_dotenv("secrets.env")
