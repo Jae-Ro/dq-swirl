@@ -51,7 +51,7 @@ MESSY_SAMPLE_DATA = [
     '{"id": "usr_002", "name": "Maria Lopez", "email": "maria.lopez@example.com", "role": "editor", "isActive": null, "createdAt": "2025-12-18T16:47:10Z", "lastLoginIp": "192.168.1.42"}',
     '{"id": "usr_003", "email": "samir.patel@example.com", "role": "viewer", "isActive": false, "createdAt": "08/05/2024"}',
     '{"id": 4, "name": "Chen Wei", "email": "chen.wei@example.com", "isActive": true, "createdAt": null}',
-    '{"id": "usr_005", "name": "Broken Record", "email": "broken@example.com"}',
+    {"id": "usr_005", "name": "Broken Record", "email": "broken@example.com"},
 ]
 
 ETL_LOOKUP_MAP = {

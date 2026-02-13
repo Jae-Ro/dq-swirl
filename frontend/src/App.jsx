@@ -131,7 +131,7 @@ const App = () => {
 
           <form className="input-bar" onSubmit={handleSend}>
             <textarea
-              placeholder="Message vLLM..."
+              placeholder="Enter a prompt for Swirl"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -143,7 +143,7 @@ const App = () => {
               <button type="submit" disabled={!input.trim()}>↑</button>
             )}
           </form>
-          <p> DQ Agent can make mistakes, so double-check it </p>
+          <p> Swirl can make mistakes, so please be sure to review </p>
         </div>
       </div>
       <div className="right-pillar"></div>

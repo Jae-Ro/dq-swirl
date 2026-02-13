@@ -5,14 +5,15 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #131314;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --bg-bubble-user: #28303f;
-  --bg-chat-input: #2b2a33;
+  --bg-bubble-user: #202122;
+  --bg-chat-input: #1e1f20;
+  --bg-chat-input-btn: #2b2a33;
   --bg-chat-button-inflight: #282c31;
   --color-copy-icon-user: white;
   --color-copy-icon-assistant: white;

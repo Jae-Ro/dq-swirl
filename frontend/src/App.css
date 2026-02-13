@@ -2,7 +2,7 @@
 .app-container {
   display: flex;
   align-items: end;
-  justify-content: first baseline;
+  justify-content: space-between;
   height: 100vh;
   width: 100vw;
 }
@@ -11,7 +11,7 @@
 .slider {
   background-color: #1e1f20;
   height: 100vh;
-  width: min(25vw, 400px);
+  width: min(22vw, 400px);
 }
 
 
@@ -20,7 +20,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  height: 70vh;
+  height: 88vh;
 }
 
 .chat-app {
@@ -126,6 +126,8 @@
 
 .bubble code {
   font-family: monospace;
+  background-color: #1a1a1a;
+  color: #e0e0e0;
 }
 
 .bubble h1 {
@@ -158,8 +160,8 @@
 
 .input-bar textarea {
   flex: 1;
-  width: min(65vw, 650px);
-  min-height: 60px;
+  width: min(70vw, 700px);
+  min-height: 30px;
   max-height: 100px;
   padding: 30px 20px;
   border: none;
@@ -184,4 +186,13 @@
   border-radius: 20px;
   cursor: pointer;
   margin: 0 10px 10px 0;
+}
+
+
+/* Dark mode default (automatic) */
+@media (prefers-color-scheme: dark) {
+  pre {
+    background-color: #1a1a1a; /* Standard deep charcoal */
+    color: #e0e0e0;
+  }
 }
